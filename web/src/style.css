@@ -1,0 +1,204 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* hypescripts.net design language: monochrome neutral palette, thin borders. Primary (accent) is the theme's opposite color:
+   white button + black text in dark theme, black button + white text in light theme */
+:root {
+  --bg: #ffffff;
+  --surface: #fafafa;
+  --surface-2: #f5f5f5;
+  --surface-active: #f0f0f0;
+  --raised: #f0f0f0;
+  --raised-hover: #e5e5e5;
+  --line: #e5e5e5;
+  --line-strong: #d4d4d4;
+  --line-focus: #a3a3a3;
+  --divider: #e5e5e5;     /* line below header / above nav */
+  --text: #0a0a0a;
+  --muted: #525252;
+  --faint: #a3a3a3;
+  --accent: #0a0a0a;
+  --on-accent: #fafafa;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --surface: #0f0f0f;
+  --surface-2: #141414;
+  --surface-active: #141414;
+  --raised: #1a1a1a;
+  --raised-hover: #252525;
+  --line: #1f1f1f;
+  --line-strong: #262626;
+  --line-focus: #3a3a3a;
+  --divider: #1f1f1f;
+  --text: #fafafa;
+  --muted: #a3a3a3;
+  --faint: #525252;
+  --accent: #fafafa;
+  --on-accent: #0a0a0a;
+}
+
+/* "inline": utilities resolve var(--accent) etc. on the element where they are used,
+   so colors update on theme change (data-theme) without recompiling. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-divider: var(--divider);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-raised: var(--raised);
+  --color-raised-hover: var(--raised-hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-line-focus: var(--line-focus);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-danger: #ff6568;
+  --color-success: #00d294;
+}
+
+/* The margin/padding/box-sizing reset already exists in Tailwind preflight (@layer base).
+   Repeating it here without a layer would override all p-*, m-* utilities. */
+* {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+/* lb-phone iframe is ~464x936 px (fixBlur off); all sizes target this screen, 1rem = 16px */
+html {
+  font-size: 16px;
+}
+
+/* No background on body: the script's own ui_page also loads over the game screen,
+   so a colored body/html would cover the whole screen. Color is only on the app container (App.vue). */
+html,
+body {
+  background: transparent;
+}
+
+body {
+  overflow: hidden;
+  color: var(--text);
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  visibility: hidden;
+}
+
+body.dev {
+  visibility: visible;
+  background: #1c1c1f;
+}
+
+.section-label {
+  margin: 22px 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+input {
+  user-select: text;
+}
+
+.view-enter-active,
+.view-leave-active {
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.view-enter-from {
+  opacity: 0;
+  transform: translateX(1rem);
+}
+
+.view-leave-to {
+  opacity: 0;
+  transform: translateX(-0.6rem);
+}
+
+/* fill-mode "backwards": transform/opacity do not stay on the element after the animation. With "both" the element
+   stays on a separate compositor layer and text gets blurry when lb-phone scales the iframe. */
+.rise {
+  animation: rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(0.6rem); }
+  to { opacity: 1; transform: none; }
+}
+
+.car-stage {
+  background: var(--surface-2);
+}
+
+.car-img {
+  filter: drop-shadow(0 0.5rem 0.6rem rgb(0 0 0 / 0.35));
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.press {
+  transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Card: thin-bordered surface, like the site */
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+/* Primary button: opposite-color background */
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+/* Secondary button */
+.btn-secondary {
+  background: var(--raised);
+  color: var(--text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--raised-hover);
+}
+
+.choice {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+/* Selected box: opposite-color border, like the site's featured pricing card */
+.choice.is-active {
+  border-color: var(--accent);
+  background: var(--surface-active);
+  color: var(--text);
+}
+
+.choice-badge {
+  background: var(--accent);
+  color: var(--on-accent);
+}
