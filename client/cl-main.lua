@@ -20,10 +20,8 @@ local function addApp()
         developer = App.developer,
         defaultApp = App.defaultApp,
         size = App.size,
-        price = App.price > 0 and App.price or nil,
-        ui = resource .. "/web/build/index.html",
-        icon = ("https://cfx-nui-%s/web/build/icon.svg"):format(resource),
-        -- lb-phone keeps the app page alive in the background, so balance and rentals are refreshed on every open
+        price = App.price,
+        -- The phone keeps the app page alive in the background, so balance and rentals are refreshed on every open
         onOpen = function()
             Debug("info", "App opened, refreshing")
             sendAppMessage("refresh")
@@ -31,9 +29,9 @@ local function addApp()
     })
 
     if not added then
-        print(("^1[%s] Failed to add the lb-phone app: %s^0"):format(resource, tostring(errorMessage)))
+        print(("^1[%s] Failed to add the phone app (%s): %s^0"):format(resource, tostring(Phone.Name()), tostring(errorMessage)))
     else
-        Debug("success", "lb-phone app added (%s)", App.identifier)
+        Debug("success", "Phone app added to %s (%s)", Phone.Name(), App.identifier)
     end
 end
 
@@ -55,7 +53,7 @@ end
 
 ---@param _ any
 ---@param cb fun(response: table)
-RegisterNUICallback("getData", function(_, cb)
+Phone.RegisterCallback("getData", function(_, cb)
     local result = lib.callback.await("hype-rentacar-app:server:getData", false)
     if not result then
         Debug("warning", "getData failed: hype-rentacar is unavailable")
@@ -95,7 +93,7 @@ end
 
 ---@param data { model: string, hours: number, payment: string }
 ---@param cb fun(response: table)
-RegisterNUICallback("rent", function(data, cb)
+Phone.RegisterCallback("rent", function(data, cb)
     Debug("info", "Rent requested: %s for %s hour(s), paid by %s", tostring(data?.model), tostring(data?.hours), tostring(data?.payment))
 
     local success, result = lib.callback.await("hype-rentacar-app:server:rent", false, data)
@@ -110,7 +108,7 @@ end)
 -- Only for picked up rentals whose vehicle is gone: spawns it next to the player
 ---@param data { id: integer }
 ---@param cb fun(response: table)
-RegisterNUICallback("respawn", function(data, cb)
+Phone.RegisterCallback("respawn", function(data, cb)
     if cache.vehicle then
         Debug("warning", "Respawn rejected: player is in a vehicle")
         return respond(cb, false, "in_vehicle")
@@ -133,7 +131,7 @@ end)
 -- GPS to the nearest office for a rental that has not been picked up yet
 ---@param data { locations: { label: string, coords: { x: number, y: number } }[] }
 ---@param cb fun(response: table)
-RegisterNUICallback("nearestOffice", function(data, cb)
+Phone.RegisterCallback("nearestOffice", function(data, cb)
     local coords = GetEntityCoords(cache.ped)
     local nearest, best
 
@@ -157,7 +155,7 @@ end)
 
 ---@param data { x: number, y: number }
 ---@param cb fun(response: table)
-RegisterNUICallback("waypoint", function(data, cb)
+Phone.RegisterCallback("waypoint", function(data, cb)
     cb({ success = true })
     if data?.x and data?.y then
         SetNewWaypoint(data.x + 0.0, data.y + 0.0)
@@ -187,23 +185,4 @@ if Framework.Client.OnMoneyChange then
     end)
 end
 
-CreateThread(function()
-    while not Phone.IsReady() do Wait(500) end
-    Wait(1000) -- Give lb-phone time to expose AddCustomApp
-    addApp()
-end)
-
----@param name string
-AddEventHandler("onResourceStart", function(name)
-    if name ~= "lb-phone" then return end
-    Debug("info", "lb-phone restarted, adding the app again")
-    Wait(1000)
-    addApp()
-end)
-
----@param name string
-AddEventHandler("onResourceStop", function(name)
-    if name ~= resource or not Phone.IsReady() then return end
-    Phone.RemoveApp(App.identifier)
-    Debug("info", "lb-phone app removed (%s)", App.identifier)
-end)
+Phone.OnReady(addApp)

@@ -1,5 +1,7 @@
 Modules = {
-    Server = {},
+    Server = {
+        Phone = {},
+    },
     Client = {
         Phone = {},
     }

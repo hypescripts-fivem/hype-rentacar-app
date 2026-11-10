@@ -4,7 +4,7 @@
 
 # hype-rentacar-app
 
-**Rent a Car phone app for lb-phone**
+**Rent a Car phone app for lb-phone, cylex_phone and codem-phone**
 
 The companion app for [`hype-rentacar`](https://github.com/hypescripts-fivem/hype-rentacar). Players rent a vehicle from their phone,
 track their active rentals with a live countdown and bring back a lost rental vehicle while the rental time is still running.
@@ -78,13 +78,27 @@ track their active rentals with a live countdown and bring back a lost rental ve
 | Type | Supported | Notes |
 | --- | --- | --- |
 | Required | [`ox_lib`](https://github.com/overextended/ox_lib/releases/latest) | Callbacks and locales |
-| Required | [`lb-phone`](https://lbscripts.com) | The app is registered as an lb-phone custom app |
+| Phone | [`lb-phone`](https://lbscripts.com/package/phone), [`cylex_phone`](https://cylexdev.gitbook.io/docs/scripts/cylex-phone) or [`codem-phone`](https://codem.gitbook.io/codem-documentation/m-series/essentials/mphone-2.5) | One of them is required. `Phone = "auto"` picks the started one (in this order) |
 | Required | [`hype-rentacar`](https://github.com/hypescripts-fivem/hype-rentacar) | All rental logic, prices, offices and the database live here |
 | Framework | `qbx_core`, `qb-core`, `es_extended` | Detected in this order. Only used to refresh the balance live; without one the balance refreshes when the app is opened |
 
 > [!NOTE]
 > Vehicles, prices, durations, offices, the driver license check, the phone service fee and the respawn fee are all configured in
 > **hype-rentacar**, not in this app. See [Rental rules](#rental-rules).
+
+### Phone support
+
+The app works on **lb-phone**, **cylex_phone** and **codem-phone**; every phone call goes through `modules/phone` (`cl-main.lua` / `sv-main.lua`).
+
+| | lb-phone | cylex_phone | codem-phone |
+| --- | --- | --- | --- |
+| App listing | App Store: name, developer, description, price, size, preinstalled | Home screen: name and icon | Home screen or App Store (`Codem.AddAppStore`): name, developer, description, preinstalled |
+| UI callbacks | NUI callbacks | NUI callbacks | `codem-phone:customApp:<identifier>:<action>` client events (`Phone.RegisterCallback` registers both) |
+| Theme | Follows the phone | `Cylex.Theme` in the config | Follows the phone (`mphone:init`) |
+| Pop-ups / menus | lb-phone components | Drawn inside the app | Phone pop-up (up to 2 buttons), menus drawn inside the app |
+| Notifications | `SendNotification` | `PhoneNotification`, icon from `Cylex.NotificationIcon` | Server `SendNotify` |
+
+On cylex_phone and codem-phone the game keys are turned off while a text field of the app is focused (`ToggleFocusKeepInput` / `SetInputFocus`).
 
 ## Installation
 
@@ -99,7 +113,7 @@ track their active rentals with a live countdown and bring back a lost rental ve
 ensure ox_lib
 ensure oxmysql
 ensure qbx_core          # or qb-core / es_extended
-ensure lb-phone
+ensure lb-phone # or cylex_phone / codem-phone
 ensure hype-rentacar
 ensure hype-rentacar-app
 ```
@@ -123,7 +137,7 @@ Everything lives in [`config/config.lua`](config/config.lua). The options:
 | --- | --- |
 | `Debug` | Print debug messages to the server / client console |
 | `Framework` | `"auto"`, `"qbx"`, `"qb"` or `"esx"`; only used for the live balance refresh |
-| `App.identifier` | Unique app id inside lb-phone |
+| `App.identifier` | Unique app id inside the phone |
 | `App.name` / `App.description` / `App.developer` | Name on the phone and App Store details |
 | `App.defaultApp` | `true` = preinstalled on every phone and cannot be removed |
 | `App.price` | App Store download price (`0` = free) |

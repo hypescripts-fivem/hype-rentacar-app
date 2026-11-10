@@ -1,4 +1,6 @@
-export const devMode = !(window as any).invokeNative;
+import { codemComponents, devMode, isCodem, isLb, phoneFetch, showContextMenu, showPopUp, unwrapMessage } from './phone';
+
+export { devMode, isCodem, isCylex, isLb } from './phone';
 
 export interface NuiResponse<T = unknown> {
     success: boolean;
@@ -6,7 +8,7 @@ export interface NuiResponse<T = unknown> {
     data?: T;
 }
 
-/** fetchNui provided by lb-phone to the iframe; returns mock data in the browser */
+/** NUI callback: lb-phone's fetchNui, a plain fetch in cylex_phone, mphone:callback in codem-phone; returns mock data in the browser */
 export async function fetchNui<T = unknown>(event: string, data?: unknown, mock?: T): Promise<NuiResponse<T>> {
     if (devMode) {
         await new Promise((resolve) => setTimeout(resolve, 250));
@@ -14,21 +16,24 @@ export async function fetchNui<T = unknown>(event: string, data?: unknown, mock?
     }
 
     try {
-        return (await (window as any).fetchNui(event, data)) as NuiResponse<T>;
+        const response = isLb ? await (window as any).fetchNui(event, data) : await phoneFetch(event, data);
+        if (!response || typeof response !== 'object') return { success: false, error: 'invalid' };
+        return response as NuiResponse<T>;
     } catch {
         return { success: false, error: 'invalid' };
     }
 }
 
-/** Listens for messages sent via SendCustomAppMessage(identifier, { action, data }) */
+/** Listens for messages sent via the phone bridge's SendAppMessage(identifier, { action, data }) */
 export function onNuiEvent<T = unknown>(action: string, cb: (data: T) => void) {
-    if (!devMode && typeof (window as any).useNuiEvent === 'function') {
+    if (isLb && typeof (window as any).useNuiEvent === 'function') {
         (window as any).useNuiEvent(action, cb);
         return;
     }
 
     window.addEventListener('message', ({ data }) => {
-        if (data?.action === action) cb(data.data);
+        const message = unwrapMessage(data);
+        if (message?.action === action) cb(message.data);
     });
 }
 
@@ -51,23 +56,21 @@ interface ContextMenu {
     buttons: { title: string; color?: 'red' | 'blue'; disabled?: boolean; cb?: () => void }[];
 }
 
-/** lb-phone components are unavailable in the browser, so simple fallbacks are used */
+/** lb-phone components; in cylex_phone, codem-phone (menus) and the browser PhoneDialogs.vue draws them */
 const components = (): any => (window as any).components;
 
 export function setPopUp(data: PopUp) {
-    if (!devMode && components()?.setPopUp) return components().setPopUp(data);
-
-    const ok = data.buttons.length < 2 || window.confirm(`${data.title}\n\n${data.description ?? ''}`);
-    const button = ok ? data.buttons[data.buttons.length - 1] : data.buttons[0];
-    button?.cb?.();
+    if (isLb && components()?.setPopUp) return components().setPopUp(data);
+    if (isCodem && codemComponents()?.setPopUp && data.buttons.length <= 2 && !data.attachment) {
+        codemComponents().setPopUp({ title: data.title, description: data.description, buttons: data.buttons });
+        return;
+    }
+    showPopUp(data);
 }
 
 export function setContextMenu(data: ContextMenu) {
-    if (!devMode && components()?.setContextMenu) return components().setContextMenu(data);
-
-    const options = data.buttons.map((button, index) => `${index + 1}. ${button.title}`).join('\n');
-    const choice = Number(window.prompt(`${data.title ?? ''}\n${options}`, '1'));
-    data.buttons[choice - 1]?.cb?.();
+    if (isLb && components()?.setContextMenu) return components().setContextMenu(data);
+    showContextMenu(data);
 }
 
 export const formatDuration = (seconds: number): string => {

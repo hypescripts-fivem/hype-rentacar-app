@@ -2,14 +2,13 @@ fx_version 'cerulean'
 game {'gta5'}
 
 author 'vezironi'
-description 'Hype Rent a Car App is an lb-phone app for hype-rentacar. Players can rent vehicles from their phone, track their active rentals and respawn rented vehicles that were removed while the rental time is still running.'
+description 'Hype Rent a Car App is a phone app (lb-phone / cylex_phone / codem-phone) for hype-rentacar. Players can rent vehicles from their phone, track their active rentals and respawn rented vehicles that were removed while the rental time is still running.'
 
 scriptname 'hype-rentacar-app'
 version '1.0.0'
 
 dependencies {
     'ox_lib',
-    'lb-phone',
     'hype-rentacar',
 }
 
@@ -27,6 +26,7 @@ client_scripts {
 }
 
 server_scripts {
+    'modules/phone/sv-main.lua',
     'server/*.lua',
 }
 

@@ -2,8 +2,10 @@
 import { onBeforeUnmount, onMounted } from 'vue';
 import { useStore, type Tab } from './store/index';
 import { devMode, onNuiEvent } from './utils';
+import { watchPhoneTheme } from './utils/phone';
 import AppIcon from './components/AppIcon.vue';
 import AppProvider from './components/AppProvider.vue';
+import PhoneDialogs from './components/PhoneDialogs.vue';
 import VehiclesView from './components/VehiclesView.vue';
 import VehicleDetail from './components/VehicleDetail.vue';
 import RentalsView from './components/RentalsView.vue';
@@ -22,14 +24,10 @@ const setTheme = (theme?: string) => {
 let poll: ReturnType<typeof setInterval> | undefined;
 
 onMounted(() => {
-    const w = window as any;
-
     if (devMode) {
         setTheme(document.documentElement.dataset.theme ?? 'dark');
     } else {
-        setTheme(w.settings?.display?.theme);
-        w.getSettings?.().then((settings: any) => setTheme(settings?.display?.theme)).catch(() => {});
-        w.onSettingsChange?.((settings: any) => setTheme(settings?.display?.theme));
+        watchPhoneTheme(setTheme);
     }
 
     store.load();
@@ -99,6 +97,8 @@ onBeforeUnmount(() => clearInterval(poll));
                     {{ store.locale(`ui.tabs.${tab.id}`) }}
                 </button>
             </nav>
+
+            <PhoneDialogs :cancel="store.locale('ui.cancel')" :confirm="store.locale('ui.ok')" />
         </div>
     </AppProvider>
 </template>
