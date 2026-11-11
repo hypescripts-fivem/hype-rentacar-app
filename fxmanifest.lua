@@ -5,7 +5,7 @@ author 'vezironi'
 description 'Hype Rent a Car App is a phone app (lb-phone / cylex_phone / codem-phone) for hype-rentacar. Players can rent vehicles from their phone, track their active rentals and respawn rented vehicles that were removed while the rental time is still running.'
 
 scriptname 'hype-rentacar-app'
-version '1.0.0'
+version '1.0.1'
 
 dependencies {
     'ox_lib',
